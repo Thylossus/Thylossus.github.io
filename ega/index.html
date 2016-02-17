@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>EGA Max-Flow Problem</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="./bootstrap/css/bootstrap.css" />
+    <style type="text/css">
+      html {
+        height: 100%;
+        width: 100%;
+      }
+      body {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        font-family: sans-serif;
+      }
+      #wrapper {
+        width: 100%;
+        height: 100%;
+
+        display: flex;
+        flex-direction: column;
+
+        justify-content: flex-start;
+        align-items: stretch;
+        align-content: stretch;
+      }
+      #header {
+        border-bottom: 2px solid #555;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+      #content {
+        flex: 1;
+
+        display: flex;
+        flex-direction: row;
+
+        justify-content: flex-start;
+        align-items: stretch;
+        align-content: stretch;
+      }
+      #container {
+        flex: 1;
+      }
+      #output {
+        padding: 20px;
+        display: none;
+
+        width: 25vw;
+        overflow: auto;
+      }
+
+      .small-centered-input {
+        width: 60px;
+        text-align: center;
+      }
+
+
+      #runProgress, #runResult, #downloadResults, #algorithmCtrl, .explanation {
+        display: none;
+      }
+
+    </style>
+  </head>
+  <body>
+    <div id="wrapper">
+      <div id="header">
+        <h1>EGA - Max-Flow Problem</h1>
+
+        <div id="graphSettings">
+          <form class="form-inline">
+            <div class="form-group">
+              <label for="graphSettingsVertices">Number of vertices</label>
+              <input class="form-control small-centered-input graph-settings" type="text" name="graphSettingsVertices" value="10" id="graphSettingsVertices" size="4" />
+            </div>
+            <div class="form-group">
+              <label for="graphSettingsMaxCapacity">Maximum capacity</label>
+              <input class="form-control small-centered-input graph-settings" type="text" name="graphSettingsMaxCapacity" value="100" id="graphSettingsMaxCapacity" size="4" />
+            </div>
+            <div class="checkbox">
+              <label class="checkbox-label" for="graphSettingsOrdered">
+                <input type="checkbox" name="graphSettingsOrdered" id="graphSettingsOrdered" class="graph-settings" checked="checked" /> Ordered
+              </label>
+            </div>
+          </form>
+        </div>
+
+        <div>
+          <form class="form-inline">
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#testEnvModal">Run Test Environment</button>
+          </form>
+        </div>
+
+        <div id="algorithmSelection">
+          <form class="form-inline">
+            <label for="algorithm" id="labelAlgorithm">Algorithm</label>
+            <select name="algorithm" id="algorithm" class="form-control">
+              <option value="1">Ford-Fulkerson</option>
+              <option value="2">Edmonds-Karp</option>
+              <option value="3">Dinic</option>
+              <option value="4">Preflow-Push</option>
+            </select>
+            <button class="btn btn-primary" id="select">Select</button>
+          </form>
+        </div>
+
+        <div id="algorithmCtrl">
+          <form class="form-inline">
+            <div class="form-group">
+              <label for="speed">Speed [ms]</label>
+              <input class="form-control small-centered-input" type="text" id="speed" value="1000" size="4"/>
+            </div>
+            <button class="btn btn-default" id="play"><span class="glyphicon glyphicon-play"></span></button>
+            <button class="btn btn-default" id="next"><span class="glyphicon glyphicon-step-forward"></span></button>
+          </form>
+        </div>
+      </div>
+      <div id="content">
+        <div id="container"></div>
+        <div id="output">
+          <h3>Explanation</h3>
+          <p>
+            In all algorithms, the source is marked <span style="font-weight:bold;color:#B200FF">purple</span> and the sink is marked <span style="font-weight:bold;color:#FFB419">yellow</span>.
+            You can either step trough the algorithm using the next button (<span class="glyphicon glyphicon-step-forward"></span>) or let it run automatically by pressing the play button (<span class="glyphicon glyphicon-play"></span>).
+            If the selected algorithms runs automatically, you can pause it at any time by pressing the pause button (<span class="glyphicon glyphicon-pause"></span>);
+          </p>
+          <p id="exFordFulkerson" class="explanation">
+            <strong>Ford-Fulkerson</strong>
+            In each iteration, the flow augmenting path is highlighted in <span style="font-weight:bold;color:#193FFF">blue</span>. The amount of flow added to the arcs on the flow augmenting path in each iteration will be listed below.
+          </p>
+          <p id="exEdmondsKarp" class="explanation">
+            <strong>Edmonds-Karp</strong>
+            In each iteration, the flow augmenting path is highlighted in <span style="font-weight:bold;color:#193FFF">blue</span>. The amount of flow added to the arcs on the flow augmenting path in each iteration will be listed below.
+          </p>
+          <p id="exDinic" class="explanation">
+            <strong>Dinic</strong>
+            In each iteration, the level graph is visualized in <span style="font-weight:bold;color:#193FFF">blue</span> and the blocking flow is highlighted in <span style="font-weight:bold;color:#FF6532">orange</span>.
+            The amount of flow added to the maximum flow in each iteration via the blocking flow will be listed below.
+          </p>
+          <p id="exPreflowPush" class="explanation">
+            <strong>Preflow-Push</strong>
+            In each push step, the arc on which the flow is augmented, is highlighted in <span style="font-weight:bold;color:#193FFF">blue</span>.
+            In addition to that, in a relabel step the relabelled vertex is colored <span style="font-weight:bold;color:#193FFF">blue</span> as well.
+            <br />
+            To visualize the saturated cut, all vertices reachable from the source in the residual graph are colored in
+            <span style="font-weight:bold;color:#666">dark gray</span> and unreachable nodes are colored in <span style="font-weight:bold;color:#AAA">light gray</span>.
+            Moreover, the arcs participating in the saturated cut are highlighted in <span style="font-weight:bold;color:#FF6532">orange</span>.
+            <br />
+            The amount of flow pushed in each "push" step and the distance label incrementation in each "relabel" step will be listed below.
+          </p>
+          <h3>Output</h3>
+          <ol></ol>
+          <p id="outputResult"></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="testEnvModal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            Run Test Environment
+          </div>
+          <div class="modal-body">
+            <p>
+              Specify number of instances, number of vertices, and the maximum capacity for the test environment.
+              Then press "Run" to start the execution in the test environment.
+            </p>
+            <form id="runSettings">
+              <div class="form-group">
+                <label for="testEnvInstances">Instances</label>
+                <input type="text" name="testEnvInstances" id="testEnvInstances" class="form-control" value="5" />
+              </div>
+              <div class="form-group">
+                <label for="testEnvVertices">Vertices</label>
+                <input type="text" name="testEnvVertices" id="testEnvVertices" class="form-control" value="25" />
+              </div>
+              <div class="form-group">
+                <label for="testEnvMaxCapacity">Max. Capacity</label>
+                <input type="text" name="testEnvMaxCapacity" id="testEnvMaxCapacity" class="form-control" value="100" />
+              </div>
+              <div class="checkbox">
+                <label for="testEnvVerbose">
+                  <input type="checkbox" id="testEnvVerbose" checked="checked" /> Verbose Output
+                </label>
+              </div>
+            </form>
+            <p id="runProgress" class="text-info">
+              Running the test environment...
+            </p>
+            <p id="runResult" class="text-success">
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" id="cancelTest">Cancel</button>
+            <button type="button" class="btn btn-primary" id="runTest">Run</button>
+            <button type="button" class="btn btn-primary" id="downloadResults">Download Results</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="./jquery-2.1.4.min.js"></script>
+    <script src="./bootstrap/js/bootstrap.js"></script>
+    <script src="./sigma.js"></script>
+    <script src="./plugins/settings.js"></script>
+    <script src="./plugins/sigma.canvas.edges.labels.def.js"></script>
+    <script src="./plugins/sigma.renderers.edgeParallel.js"></script>
+    <script src="./bundle.js"></script>
+    <script src="./index.js"></script>
+  </body>
+</html>
